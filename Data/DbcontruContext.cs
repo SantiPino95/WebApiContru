@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MiWebApi.Entity;
 
 namespace MiWebApi.Data;
@@ -32,7 +30,7 @@ public partial class DbcontruContext : DbContext
 
     public virtual DbSet<HerramientasAsignada> HerramientasAsignadas { get; set; }
 
-    public virtual DbSet<Material> Materials { get; set; }
+    public virtual DbSet<Material> Material { get; set; }
 
     public virtual DbSet<MaterialObra> MaterialObras { get; set; }
 
@@ -41,8 +39,6 @@ public partial class DbcontruContext : DbContext
     public virtual DbSet<Obra> Obras { get; set; }
 
     public virtual DbSet<OrdenCompra> OrdenCompras { get; set; }
-
-    public virtual DbSet<PagoEmpleado> PagoEmpleados { get; set; }
 
     public virtual DbSet<PagoProveedor> PagoProveedors { get; set; }
 
@@ -56,7 +52,7 @@ public partial class DbcontruContext : DbContext
 
     public virtual DbSet<SeguimientoObra> SeguimientoObras { get; set; }
 
-    public virtual DbSet<StockMaterial> StockMaterials { get; set; }
+    public virtual DbSet<StockMaterial> StockMaterial { get; set; }
 
     public virtual DbSet<Usuario> Usuarios { get; set; }
 
@@ -143,10 +139,12 @@ public partial class DbcontruContext : DbContext
             entity.Property(e => e.Cedula).HasMaxLength(20);
             entity.Property(e => e.IdUsuario).HasColumnName("Id_Usuario");
             entity.Property(e => e.Nombre).HasMaxLength(100);
+            entity.Property(e => e.Apellido).HasMaxLength(100);
             entity.Property(e => e.Telefono).HasMaxLength(20);
             entity.Property(e => e.ValorHora)
                 .HasPrecision(10)
                 .HasColumnName("Valor_Hora");
+            entity.Property(e => e.Categoria).HasMaxLength(200);
 
             entity.HasOne(d => d.IdUsuarioNavigation).WithOne(p => p.Empleado)
                 .HasForeignKey<Empleado>(d => d.IdUsuario)
@@ -399,31 +397,7 @@ public partial class DbcontruContext : DbContext
                 .HasConstraintName("orden_compra_ibfk_1");
         });
 
-        modelBuilder.Entity<PagoEmpleado>(entity =>
-        {
-            entity.HasKey(e => e.IdPagoEmpleado).HasName("PRIMARY");
 
-            entity.ToTable("pago_empleado");
-
-            entity.HasIndex(e => new { e.IdEmpleado, e.PeriodoMesAnio }, "UQ_Empleado_Periodo").IsUnique();
-
-            entity.Property(e => e.IdPagoEmpleado).HasColumnName("Id_Pago_Empleado");
-            entity.Property(e => e.FechaPago)
-                .HasColumnType("date")
-                .HasColumnName("Fecha_Pago");
-            entity.Property(e => e.IdEmpleado).HasColumnName("Id_Empleado");
-            entity.Property(e => e.MontoNeto)
-                .HasPrecision(10)
-                .HasColumnName("Monto_Neto");
-            entity.Property(e => e.PeriodoMesAnio)
-                .HasMaxLength(7)
-                .HasColumnName("Periodo_Mes_Anio");
-
-            entity.HasOne(d => d.IdEmpleadoNavigation).WithMany(p => p.PagoEmpleados)
-                .HasForeignKey(d => d.IdEmpleado)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("pago_empleado_ibfk_1");
-        });
 
         modelBuilder.Entity<PagoProveedor>(entity =>
         {
