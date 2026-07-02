@@ -69,6 +69,14 @@ namespace MiWebApi.Services.Clientes
 
         public async Task<bool> CrearClienteAsync(CrearClienteDTOs dto)
         {
+
+            var clienteExistente = await _clienteRepository.ObtenerClientePorEmailAsync(dto.Email);
+            if (clienteExistente != null)
+            {
+                // Si ya existe un cliente con ese mail, cancelamos la operación de forma limpia
+                // Sin romper la app y avisándole al controlador.
+                return false;
+            }
             // 1. Creamos la entidad a partir del DTO
             var cliente = new Cliente
             {

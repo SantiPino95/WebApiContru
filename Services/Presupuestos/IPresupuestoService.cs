@@ -1,6 +1,10 @@
-﻿namespace MiWebApi.Services.Presupuestos
+﻿using MiWebApi.DTOs;
+
+namespace MiWebApi.Services.Presupuestos
 {
-    public class IPresupuestoService
+    public interface IPresupuestoService
     {
+        Task<IEnumerable<PresupuestoListadoDto>> ObtenerPresupuestosAsync();
+        Task<bool> CrearPresupuestoAsync(CrearPresupuestoDto dto);
     }
 }

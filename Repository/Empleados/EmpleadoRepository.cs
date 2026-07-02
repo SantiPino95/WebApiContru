@@ -38,10 +38,19 @@ namespace MiWebApi.Repository.Empleados
         public async Task EliminarEmpleadoAsync(Empleado empleado)
         {
             _context.Empleados.Remove(empleado);
-                await _context.SaveChangesAsync();
-            }
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<EmpleadoObra>> ListarEmpleadosAsignados()
+        {
+            return await _context.EmpleadoObras.Include(eo => eo.IdEmpleadoNavigation)
+                                               .Include(eo => eo.IdObraNavigation)
+                                               .ToListAsync();
+
+
         }
     }
+}
 
 
     

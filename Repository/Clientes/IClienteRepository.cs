@@ -6,6 +6,7 @@ namespace MiWebApi.Repository.Clientes
     {
         Task<IEnumerable<Cliente>> ListarTodosLosClientesAsync();
         Task<Cliente?> ObtenerClientePorIdAsync(int id);
+        Task<Cliente?> ObtenerClientePorEmailAsync(string email);
         Task<bool> AgregarClienteAsync(Cliente cliente);
         Task<bool> ActualizarClienteAsync(Cliente cliente);
         Task<bool> EliminarClienteAsync(Cliente cliente);
