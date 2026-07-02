@@ -27,6 +27,20 @@ namespace MiWebApi.Services.Empleados
             }).ToList();
         }
 
+        public async Task<IEnumerable<EmpleadoObraDTOs>> ObtenerEmpleadosAsignadosAsync()
+        {
+            var listaEntidades = await _empleadoRepository.ListarEmpleadosAsignados();
+            return listaEntidades.Select(e => new EmpleadoObraDTOs
+            {
+                IdEmpleado = e.IdEmpleado,
+                NombreCompleto = $"{e.IdEmpleadoNavigation.Nombre} {e.IdEmpleadoNavigation.Apellido}",
+                Categoria = e.IdEmpleadoNavigation.Categoria,
+                Telefono = e.IdEmpleadoNavigation.Telefono,
+                IdObra = e.IdObra,
+                NombreObra = e.IdObraNavigation.NombreObra
+            }).ToList();
+        }
+
         public async Task<EmpleadoListadoDTOs?> ObtenerEmpleadoPorIdAsync(int id)
         {
             var empleado = await _empleadoRepository.ObtenerEmpleadoPorIdAsync(id);

@@ -1,6 +1,7 @@
 ﻿using MiWebApi.Data;
 using MiWebApi.Entity;
-using Microsoft.EntityFrameworkCore;    
+using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Mozilla;
 
 namespace MiWebApi.Repository.Clientes
 {
@@ -16,6 +17,11 @@ namespace MiWebApi.Repository.Clientes
         public async Task<Cliente?> ObtenerClientePorIdAsync(int id)
         {
             return await _context.Clientes.FindAsync(id);
+        }
+
+        public async Task<Cliente?> ObtenerClientePorEmailAsync(string email)
+        {
+            return await _context.Clientes.FirstOrDefaultAsync(c => c.Email == email);
         }
 
         public async Task<IEnumerable<Cliente>> ListarTodosLosClientesAsync()

@@ -1,6 +1,11 @@
-﻿namespace MiWebApi.Repository.Presupuestos
+﻿using MiWebApi.Entity;
+
+namespace MiWebApi.Repository.Presupuestos
 {
-    public class IPresupuestoRepository
+    public interface IPresupuestoRepository
     {
+        Task<IEnumerable<Presupuesto>> ListarTodosConObrasAsync();
+        Task<bool> AgregarPresupuestoCompletoAsync(Presupuesto presupuesto);
+        Task<bool> CambiarEstadoAsync(int idPresupuesto, string nuevoEstado);
     }
 }

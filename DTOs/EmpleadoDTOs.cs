@@ -27,8 +27,16 @@
         }
 
     
+    public class EmpleadoObraDTOs
+    {
+        public int IdEmpleado { get; set; }
+        public string NombreCompleto { get; set; } = null!;
+        public string Categoria { get; set; } = null!;
+        public string? Telefono { get; set; }
+        public int IdObra { get; set; }
+        public string NombreObra { get; set; } = null!;
+    }
 
-    
 }
 
 

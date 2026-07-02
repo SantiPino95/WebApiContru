@@ -1,6 +1,10 @@
-﻿namespace MiWebApi.Services.Proveedores
+﻿using MiWebApi.DTOs;
+
+namespace MiWebApi.Services.Proveedores
 {
-    public class IProveedorService
+    public interface IProveedorService 
     {
+        Task<IEnumerable<ProveedorListadoDto>> ObtenerTodosAsync();
+        Task<bool> CrearProveedorAsync(CrearProveedorDto dto);
     }
 }

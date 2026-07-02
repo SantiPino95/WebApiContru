@@ -70,5 +70,12 @@ namespace MiWebApi.Controllers
             }
             return Ok(new { mensaje = "Empleado eliminado con éxito" });
         }
+        // 6. OBTENER EMPLEADOS ASIGNADOS (GET: api/Empleado/asignados)
+        [HttpGet("asignados")]
+        public async Task<IActionResult> ObtenerEmpleadosAsignados()
+        {
+            var empleados = await _empleadoService.ObtenerEmpleadosAsignadosAsync();
+            return Ok(empleados);
+        }
     }
 }

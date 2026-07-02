@@ -11,6 +11,7 @@ namespace MiWebApi.Repository.Empleados
             Task AgregarEmpleadoAsync(Empleado empleado);
             Task ActualizarEmpleadoAsync(Empleado empleado);
             Task EliminarEmpleadoAsync(Empleado empleado);
+        Task<IEnumerable<EmpleadoObra>> ListarEmpleadosAsignados();
         
     }
 
