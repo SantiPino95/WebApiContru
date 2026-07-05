@@ -22,6 +22,26 @@ namespace MiWebApi.Controllers
                 var res = await _service.CrearProveedorAsync(dto);
                 return res ? Ok("Proveedor registrado.") : BadRequest("El RUT ya existe.");
             }
+
+
+
+
+
+            // PUT: api/Proveedores/{id}
+            [HttpPut("{id}")]
+            public async Task<IActionResult> Update(int id, [FromBody] CrearProveedorDto dto)
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var resultado = await _service.ActualizarProveedorAsync(id, dto);
+                if (!resultado)
+                    return NotFound(new { mensaje = $"No se encontró el proveedor con ID {id} o el RUT ya existe." });
+
+                return Ok(new { mensaje = "Proveedor actualizado con éxito" });
+            }
         }
+
+
     }
 }

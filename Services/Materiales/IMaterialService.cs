@@ -12,5 +12,6 @@ namespace MiWebApi.Services.Materiales
 
         // Caso de uso: Mandar materiales a la obra y restar del stock de forma automática
         Task<bool> RegistrarConsumoEnObraAsync(int idMaterial, int idObra, decimal cantidad);
+        Task<bool> ReponerStockAsync(ReponerStockDto dto);
     }
 }

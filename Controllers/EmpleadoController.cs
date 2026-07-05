@@ -77,5 +77,19 @@ namespace MiWebApi.Controllers
             var empleados = await _empleadoService.ObtenerEmpleadosAsignadosAsync();
             return Ok(empleados);
         }
+
+        // POST: api/Empleado/asignar
+        [HttpPost("asignar")]
+        public async Task<IActionResult> AsignarAObra([FromBody] AsignarEmpleadoObraDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var resultado = await _empleadoService.AsignarEmpleadoAObraAsync(dto);
+            if (!resultado)
+                return BadRequest(new { mensaje = "No se pudo asignar el empleado a la obra." });
+
+            return StatusCode(201, new { mensaje = "Empleado asignado a la obra con éxito" });
+        }
     }
 }

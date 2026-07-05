@@ -6,5 +6,6 @@ namespace MiWebApi.Services.Proveedores
     {
         Task<IEnumerable<ProveedorListadoDto>> ObtenerTodosAsync();
         Task<bool> CrearProveedorAsync(CrearProveedorDto dto);
+        Task<bool> ActualizarProveedorAsync(int id, CrearProveedorDto dto);
     }
 }

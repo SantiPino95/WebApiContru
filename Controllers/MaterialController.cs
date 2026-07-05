@@ -53,5 +53,19 @@ namespace MiWebApi.Controllers
             if (!resultado) return BadRequest("No se pudo registrar el consumo. Verifica si el material existe o si hay stock disponible suficiente.");
             return Ok("Consumo registrado y stock actualizado correctamente.");
         }
+
+        // POST: api/Materiales/entrada
+        [HttpPost("entrada")]
+        public async Task<IActionResult> ReponerStock([FromBody] ReponerStockDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var resultado = await _materialService.ReponerStockAsync(dto);
+            if (!resultado)
+                return NotFound(new { mensaje = $"No se encontró el material con ID {dto.IdMaterial}" });
+
+            return Ok(new { mensaje = $"Stock repuesto con éxito. Se agregaron {dto.Cantidad} unidades." });
+        }
     }
 }

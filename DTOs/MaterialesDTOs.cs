@@ -27,4 +27,12 @@ namespace MiWebApi.Dtos
         public decimal CantidadInicial { get; set; } = 0;
         public decimal StockMinimo { get; set; } = 0;
     }
+
+
+    public class ReponerStockDto
+    {
+        public int IdMaterial { get; set; }
+        public decimal Cantidad { get; set; }
+        public string? Observaciones { get; set; }
+    }
 }

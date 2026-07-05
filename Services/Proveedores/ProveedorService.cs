@@ -35,8 +35,25 @@ namespace MiWebApi.Services.Proveedores
                 Telefono = dto.Telefono,
                 Email = dto.Email
             };
-            return await _repo.AgregarAsync(nuevo);
+           return  await _repo.AgregarAsync(nuevo);
+            
         }
 
+
+        public async Task<bool> ActualizarProveedorAsync(int id, CrearProveedorDto dto) {
+            var existente = await _repo.ObtenerPorIdAsync(id);
+
+           if (existente == null) return false;
+            // Regla de Negocio: No permitir RUT repetido en el taller
+            var otroConMismoRut = await _repo.ObtenerPorRutAsync(dto.Rut);
+            if (otroConMismoRut != null && otroConMismoRut.IdProveedor != id) return false;
+            existente.Nombre = dto.Nombre;
+            existente.Rut = dto.Rut;
+            existente.Telefono = dto.Telefono;
+            existente.Email = dto.Email;
+            return await _repo.ActualizarAsync(existente);
+            
+
+        }
     }
 }

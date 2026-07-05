@@ -6,5 +6,6 @@ namespace MiWebApi.Services.Presupuestos
     {
         Task<IEnumerable<PresupuestoListadoDto>> ObtenerPresupuestosAsync();
         Task<bool> CrearPresupuestoAsync(CrearPresupuestoDto dto);
+        Task<bool> CambiarEstadoAsync(int idPresupuesto, string nuevoEstado); // NUEVO
     }
 }

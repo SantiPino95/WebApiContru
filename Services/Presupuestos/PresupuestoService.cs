@@ -65,5 +65,17 @@ namespace MiWebApi.Services.Presupuestos
             // 4. Mandamos todo al repositorio
             return await _repo.AgregarPresupuestoCompletoAsync(nuevoPresupuesto);
         }
+
+
+        public async Task<bool> CambiarEstadoAsync(int idPresupuesto, string nuevoEstado)
+        {
+            // Validar que el estado sea válido
+            var estadosValidos = new[] { "Aprobado", "Rechazado", "Pendiente" };
+            if (!estadosValidos.Contains(nuevoEstado))
+                return false;
+
+            return await _repo.CambiarEstadoAsync(idPresupuesto, nuevoEstado);
+        }
+
     }
 }

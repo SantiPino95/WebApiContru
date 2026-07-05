@@ -37,6 +37,15 @@
         public string NombreObra { get; set; } = null!;
     }
 
+
+    // DTO para ASIGNAR empleado a una obra
+    public class AsignarEmpleadoObraDto
+    {
+        public int IdEmpleado { get; set; }
+        public int IdObra { get; set; }
+        public string RolEnObra { get; set; } = "Oficial";
+        public decimal ValorHoraAsignado { get; set; }
+    }
 }
 
 

@@ -49,6 +49,13 @@ namespace MiWebApi.Repository.Empleados
 
 
         }
+
+        public async Task<EmpleadoObra?> AsignarEmpleadoAObraAsync(EmpleadoObra asignacion)
+        {
+            _context.EmpleadoObras.Add(asignacion);
+            await _context.SaveChangesAsync();
+            return asignacion;
+        }
     }
 }
 

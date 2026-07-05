@@ -27,6 +27,8 @@ namespace MiWebApi.Services.Empleados
             }).ToList();
         }
 
+
+
         public async Task<IEnumerable<EmpleadoObraDTOs>> ObtenerEmpleadosAsignadosAsync()
         {
             var listaEntidades = await _empleadoRepository.ListarEmpleadosAsignados();
@@ -92,6 +94,23 @@ namespace MiWebApi.Services.Empleados
             return true;
         }
 
+       public async Task<bool> AsignarEmpleadoAObraAsync(AsignarEmpleadoObraDto dto)
+{
+    var empleado = await _empleadoRepository.ObtenerEmpleadoPorIdAsync(dto.IdEmpleado);
+    if (empleado == null) return false;
+
+    var asignacion = new EmpleadoObra
+    {
+        IdEmpleado = dto.IdEmpleado,
+        IdObra = dto.IdObra,
+        FechaAsignacion = DateTime.Now,
+        RolEnObra = dto.RolEnObra,
+        ValorHoraAsignado = dto.ValorHoraAsignado > 0 ? dto.ValorHoraAsignado : empleado.ValorHora
+    };
+
+    await _empleadoRepository.AsignarEmpleadoAObraAsync(asignacion);
+    return true;
+}
 
     }
 }
