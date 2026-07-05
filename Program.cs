@@ -5,11 +5,15 @@ using MiWebApi.Repository.Empleados;
 using MiWebApi.Repository.Obras;
 using MiWebApi.Repository.Herramientas; 
 using MiWebApi.Repository.Materiales;
+using MiWebApi.Repository.Presupuestos;
+using MiWebApi.Repository.Proveedores;
 using MiWebApi.Services.Clientes;
 using MiWebApi.Services.Empleados;
 using MiWebApi.Services.Obras;
 using MiWebApi.Services.Herramientas;
 using MiWebApi.Services.Materiales;
+using MiWebApi.Services.Presupuestos;
+using MiWebApi.Services.Proveedores;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,7 +49,10 @@ builder.Services.AddScoped<IHerramientaRepository, HerramientaRepository>();
 builder.Services.AddScoped<IHerramientaService, HerramientaService>();
 builder.Services.AddScoped<IMaterialRepository, MaterialRepository>();
 builder.Services.AddScoped<IMaterialService, MaterialService>();
-
+builder.Services.AddScoped<IProveedorRepository, ProveedorRepository>();
+builder.Services.AddScoped<IProveedorService, ProveedorService>();
+builder.Services.AddScoped<IPresupuestoRepository, PresupuestoRepository>();
+builder.Services.AddScoped<IPresupuestoService, PresupuestoService>();
 
 // ----------------------------------------
 var app = builder.Build();
