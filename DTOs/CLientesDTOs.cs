@@ -2,6 +2,7 @@
 
 namespace MiWebApi.DTOs
 {
+    // DTO para listar clientes con sus obras asociadas
     public class CLientesListadoDTOs
     {
         public int IdCliente { get; set; }
@@ -12,18 +13,17 @@ namespace MiWebApi.DTOs
         public List<ObraResumenDto> Obras { get; set; } = new List<ObraResumenDto>();
     }
 
-  
+    // DTO para mostrar un resumen de la obra asociada al cliente
     public class ObraResumenDto
     {
         public int IdObra { get; set; }
         public string NombreObra { get; set; } = null!;
     }
 
-
+    // DTO para crear un nuevo cliente
     public class CrearClienteDTOs
     {
-        // El ID no lo necesitas aquí porque la base de datos lo genera solo (Identity)
-        // Puedes borrarlo de este DTO de creación si quieres.
+       //
 
         [Required(ErrorMessage = "El nombre es obligatorio")]
         public string Nombre { get; set; } = null!; // Obligatorio
@@ -31,7 +31,7 @@ namespace MiWebApi.DTOs
         [Required(ErrorMessage = "La dirección es obligatoria")]
         public string Direccion { get; set; } = null!; // Obligatorio
 
-        // Si el teléfono y el email no son obligatorios para registrarse, usa '?'
+        // Si el teléfono y el email no son obligatorios para registrarse, se usa '?'
         public string? Telefono { get; set; }
 
         [Required(ErrorMessage = "El email es obligatorio")]
