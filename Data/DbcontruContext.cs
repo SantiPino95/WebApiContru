@@ -256,13 +256,17 @@ public partial class DbcontruContext : DbContext
                 .HasColumnType("date")
                 .HasColumnName("Fecha_Devolucion");
 
-            entity.HasOne(d => d.IdHerramientaNavigation).WithMany(p => p.HerramientasAsignada)
+            // ✅ CORREGIDO: Cambiar a DeleteBehavior.Restrict
+            entity.HasOne(d => d.IdHerramientaNavigation)
+                .WithMany(p => p.HerramientasAsignada)
                 .HasForeignKey(d => d.IdHerramienta)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.Restrict)  // ✅ En lugar de ClientSetNull
                 .HasConstraintName("herramientas_asignadas_ibfk_2");
 
-            entity.HasOne(d => d.IdObraNavigation).WithMany(p => p.HerramientasAsignada)
+            entity.HasOne(d => d.IdObraNavigation)
+                .WithMany(p => p.HerramientasAsignada)
                 .HasForeignKey(d => d.IdObra)
+                .OnDelete(DeleteBehavior.Restrict)  // ✅ En lugar de ClientSetNull
                 .HasConstraintName("herramientas_asignadas_ibfk_1");
         });
 
