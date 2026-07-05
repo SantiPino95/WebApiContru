@@ -17,6 +17,7 @@ namespace MiWebApi.Dtos
         public DateTime? UltimaFechaSalida { get; set; }
         public DateTime? FechaDevolucion { get; set; }
         public bool EstaAsignadaActualmente => UltimaFechaSalida.HasValue && !FechaDevolucion.HasValue;
+        
     }
 
     // --- DTO PARA CREAR UNA NUEVA HERRAMIENTA ---
@@ -25,7 +26,7 @@ namespace MiWebApi.Dtos
         // No va IdHerramienta porque es AUTO_INCREMENT en MySQL
         public string NombreTipo { get; set; } = null!;
         public string CodigoInventario { get; set; } = null!;
-        public string EstadoDisponibilidad { get; set; } = "Disponible"; // Valor por defecto lógico
+        public string EstadoDisponibilidad { get; set; } = default!;
         public string Origen { get; set; } = null!;
 
         // Al crear la herramienta de cero en el inventario, no se manda IdObra 

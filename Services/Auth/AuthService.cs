@@ -30,54 +30,19 @@ namespace MiWebApi.Services.Auth
             if (usuarioExistente != null)
                 return false;
 
-            // 2. Verificar si la cédula ya está registrada
-            var empleadoExistente = await _context.Empleados
-                .FirstOrDefaultAsync(e => e.Cedula == dto.Cedula);
-
-            if (empleadoExistente != null)
-                return false;
-
-
-            // 3. ✅ VALIDAR QUE EL ROL EXISTA
-            var rolExistente = await _context.Rols.FindAsync(dto.IdRol);
-            if (rolExistente == null)
-            {
-                // Si no existe, usar rol por defecto (ej: Empleado = 2)
-                dto.IdRol = 2; // Ajusta según tu BD
-            }
-
-            // 4. Hashear la contraseña
+            // 2. Hashear la contraseña
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
-            // 5. Crear el usuario
+            // 3. Crear el usuario SOLO (sin empleado)
             var nuevoUsuario = new Usuario
             {
                 Email = dto.Email,
                 Contrasena = hashedPassword,
-                IdRol = dto.IdRol,
-                Estado = "Pendiente" // Pendiente de aprobación por admin
+                IdRol = 5, // Rol por defecto: Empleado
+                Estado = "Pendiente" // Pendiente de aprobación
             };
 
-            // 6. Crear el empleado vinculado al usuario
-            var nuevoEmpleado = new Empleado
-            {
-                Nombre = dto.Nombre,
-                Apellido = dto.Apellido,
-                Cedula = dto.Cedula,
-                Telefono = dto.Telefono,
-                ValorHora = dto.ValorHora,
-                Categoria = dto.Categoria,
-                IdUsuario = nuevoUsuario.IdUsuario // Se setea después de guardar
-            };
-
-            // Guardar usuario primero para obtener el Id
             await _context.Usuarios.AddAsync(nuevoUsuario);
-            await _context.SaveChangesAsync();
-
-            // Asignar el IdUsuario al empleado
-            nuevoEmpleado.IdUsuario = nuevoUsuario.IdUsuario;
-
-            await _context.Empleados.AddAsync(nuevoEmpleado);
             await _context.SaveChangesAsync();
 
             return true;

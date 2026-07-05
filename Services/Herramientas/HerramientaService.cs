@@ -1,64 +1,85 @@
-﻿using MiWebApi.Dtos;
-using MiWebApi.Repository.Herramientas;
+﻿using Microsoft.EntityFrameworkCore;
+using MiWebApi.Data;
+using MiWebApi.Dtos;
 using MiWebApi.Entity;
-using System.Security.Cryptography.X509Certificates;
+using MiWebApi.Repository.Herramientas;
 
 namespace MiWebApi.Services.Herramientas
 {
     public class HerramientaService : IHerramientaService
     {
-
-
         private readonly IHerramientaRepository _herramientaRepository;
+        private readonly DbcontruContext _context;
 
-
-        public HerramientaService(IHerramientaRepository herramientaRepository)
+        public HerramientaService(IHerramientaRepository herramientaRepository , DbcontruContext context)
         {
             _herramientaRepository = herramientaRepository;
-        }
+            _context = context;
 
+        }
 
         public async Task<IEnumerable<HerramientaListadoDto>> ObtenerHerramientasParaAdminAsync()
         {
-            // Usamos el nombre exacto de tu método del repositorio: ListarTodasLasHerramientasAsync()
-            var listaEntidades = await _herramientaRepository.ListarTodasLasHerramientasAsync();
-
-            return listaEntidades.Select(h =>
+            try
             {
-                var ultimaAsignacion = h.HerramientasAsignada
-                    .OrderByDescending(a => a.FechaSalida)
-                    .FirstOrDefault();
+                var listaEntidades = await _herramientaRepository.ListarTodasLasHerramientasAsync();
 
-                return new HerramientaListadoDto
+                Console.WriteLine($"✅ Herramientas encontradas en BD: {listaEntidades.Count()}");
+
+                return listaEntidades.Select(h =>
                 {
-                    IdHerramienta = h.IdHerramienta,
-                    NombreTipo = h.NombreTipo,
-                    CodigoInventario = h.CodigoInventario,
-                    EstadoDisponibilidad = h.EstadoDisponibilidad,
-                    Origen = h.Origen,
+                    var ultimaAsignacion = h.HerramientasAsignada
+                        .OrderByDescending(a => a.FechaSalida)
+                        .FirstOrDefault();
 
-                    IdObraActual = ultimaAsignacion?.IdObra,
-                    NombreObraActual = ultimaAsignacion?.IdObraNavigation?.NombreObra ?? "Sin Obra",
-                    UltimaFechaSalida = ultimaAsignacion?.FechaSalida,
-                    FechaDevolucion = ultimaAsignacion?.FechaDevolucion
-                };
-            }).ToList();
+                    var estaAsignada = ultimaAsignacion != null && ultimaAsignacion.FechaDevolucion == null;
+
+                    var estadoReal = estaAsignada ? "En Obra" :
+                                     h.EstadoDisponibilidad == "En Reparación" ? "En Reparación" :
+                                     "Disponible";
+
+                    return new HerramientaListadoDto
+                    {
+                        IdHerramienta = h.IdHerramienta,
+                        NombreTipo = h.NombreTipo,
+                        CodigoInventario = h.CodigoInventario,
+                        EstadoDisponibilidad = estadoReal,
+                        Origen = h.Origen,
+                        IdObraActual = ultimaAsignacion?.IdObra,
+                        NombreObraActual = ultimaAsignacion?.IdObraNavigation?.NombreObra ?? "Sin Obra",
+                        UltimaFechaSalida = ultimaAsignacion?.FechaSalida,
+                        FechaDevolucion = ultimaAsignacion?.FechaDevolucion
+                    };
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ ERROR en ObtenerHerramientasParaAdminAsync: {ex.Message}");
+                Console.WriteLine($"Stack: {ex.StackTrace}");
+                throw;
+            }
         }
-
 
         public async Task<HerramientaListadoDto?> ObtenerHerramientaPorIdAsync(int id)
         {
             var herramienta = await _herramientaRepository.ObtenerHerramientaPorIdAsync(id);
             if (herramienta == null) return null;
+
             var ultimaAsignacion = herramienta.HerramientasAsignada
                 .OrderByDescending(a => a.FechaSalida)
                 .FirstOrDefault();
+
+            var estaAsignada = ultimaAsignacion != null && ultimaAsignacion.FechaDevolucion == null;
+            var estadoReal = estaAsignada ? "En Obra" :
+                             herramienta.EstadoDisponibilidad == "En Reparación" ? "En Reparación" :
+                             "Disponible";
+
             return new HerramientaListadoDto
             {
                 IdHerramienta = herramienta.IdHerramienta,
                 NombreTipo = herramienta.NombreTipo,
                 CodigoInventario = herramienta.CodigoInventario,
-                EstadoDisponibilidad = herramienta.EstadoDisponibilidad,
+                EstadoDisponibilidad = estadoReal,
                 Origen = herramienta.Origen,
                 IdObraActual = ultimaAsignacion?.IdObra,
                 NombreObraActual = ultimaAsignacion?.IdObraNavigation?.NombreObra ?? "Sin Obra",
@@ -66,83 +87,127 @@ namespace MiWebApi.Services.Herramientas
                 FechaDevolucion = ultimaAsignacion?.FechaDevolucion
             };
         }
+
         public async Task<bool> AgregarHerramientaAsync(CrearHerramientaDto dto)
         {
             var nuevaHerramienta = new Herramienta
             {
                 NombreTipo = dto.NombreTipo,
                 CodigoInventario = dto.CodigoInventario,
-                EstadoDisponibilidad = dto.EstadoDisponibilidad,
+                EstadoDisponibilidad = "Disponible",
                 Origen = dto.Origen
-
-
             };
             return await _herramientaRepository.AgregarHerramientaAsync(nuevaHerramienta);
-
         }
 
         public async Task<bool> ActualizarHerramientaAsync(int id, CrearHerramientaDto dto)
         {
             var herramientaExistente = await _herramientaRepository.ObtenerHerramientaPorIdAsync(id);
             if (herramientaExistente == null) return false;
+
             herramientaExistente.NombreTipo = dto.NombreTipo;
             herramientaExistente.CodigoInventario = dto.CodigoInventario;
-            herramientaExistente.EstadoDisponibilidad = dto.EstadoDisponibilidad;
             herramientaExistente.Origen = dto.Origen;
+
             return await _herramientaRepository.ActualizarHerramientaAsync(herramientaExistente);
         }
 
-
-
+        // ✅ ELIMINAR - CORREGIDO: Solo permite eliminar si NO está asignada
         public async Task<bool> EliminarHerramientaAsync(int id)
         {
-            var herramientaExistente = await _herramientaRepository.ObtenerHerramientaPorIdAsync(id);
-            if (herramientaExistente == null) return false;
-            return await _herramientaRepository.EliminarHerramientaAsync(herramientaExistente);
+            // 1. Obtener la herramienta con sus asignaciones
+            var herramienta = await _herramientaRepository.ObtenerHerramientaPorIdAsync(id);
+            if (herramienta == null) return false;
 
+            // 2. Verificar si tiene asignaciones ACTIVAS (sin devolución)
+            var tieneAsignacionActiva = herramienta.HerramientasAsignada
+                .Any(a => a.FechaDevolucion == null);
 
+            if (tieneAsignacionActiva)
+            {
+                // ❌ No se puede eliminar si está asignada a una obra
+                return false;
+            }
 
+            // 3. ✅ ELIMINAR TODAS LAS ASIGNACIONES (aunque estén devueltas)
+            //    Esto es necesario porque la relación es REQUIRED
+            var asignaciones = herramienta.HerramientasAsignada.ToList();
 
+            if (asignaciones.Any())
+            {
+                foreach (var asignacion in asignaciones)
+                {
+                    _context.HerramientasAsignadas.Remove(asignacion);
+                }
+                await _context.SaveChangesAsync();
+                Console.WriteLine($"✅ Eliminadas {asignaciones.Count} asignaciones de la herramienta {id}");
+            }
 
+            // 4. Ahora eliminar la herramienta (ya no tiene hijos)
+            return await _herramientaRepository.EliminarHerramientaAsync(herramienta);
         }
 
+        // ✅ ASIGNAR - CORREGIDO
         public async Task<bool> RegistrarSalidaAsignacionAsync(int idHerramienta, int idObra)
         {
+            // 1. Obtener herramienta
+            var herramienta = await _herramientaRepository.ObtenerHerramientaPorIdAsync(idHerramienta);
+            if (herramienta == null) return false;
+
+            // 2. ✅ Verificar si la herramienta YA ESTÁ ASIGNADA A ALGUNA OBRA
+            var asignacionActiva = herramienta.HerramientasAsignada
+                .Any(a => a.FechaDevolucion == null);
+
+            if (asignacionActiva)
+            {
+                // ❌ La herramienta ya está asignada a otra obra
+                Console.WriteLine($"❌ Herramienta {idHerramienta} ya está asignada a otra obra");
+                return false;
+            }
+
+            // 3. Verificar que no esté en reparación
+            if (herramienta.EstadoDisponibilidad == "En Reparación") return false;
+
+            // 4. Crear la asignación
             var asignacion = new HerramientasAsignada
             {
                 IdHerramienta = idHerramienta,
                 IdObra = idObra,
-                FechaSalida = DateTime.Now,
-                FechaDevolucion = null // Inicialmente null, se actualizará cuando se devuelva la herramienta
+                FechaSalida = DateTime.Now.Date,
+                FechaDevolucion = null
             };
-            return await _herramientaRepository.RegistrarSalidaAsignacionAsync(asignacion);
-        }
 
+            // 5. Guardar la asignación
+            var resultado = await _herramientaRepository.RegistrarSalidaAsignacionAsync(asignacion);
+            if (!resultado) return false;
 
-        public async Task<bool> RegistrarDevolucionHerramientaAsync(int idHerramienta, int idObra)
-        {
-            // 1. Buscamos la asignación que está abierta en la base de datos (FechaDevolucion es null)
-            var asignacionActiva = await _herramientaRepository.ObtenerAsignacionActivaAsync(idHerramienta, idObra);
-
-            if (asignacionActiva == null) return false; // Si no existe, no hay nada que devolver
-
-            // 2. EL SERVICIO LE PONE LA FECHA ACTUAL (Nadie digita nada a mano)
-            asignacionActiva.FechaDevolucion = DateTime.Now;
-
-            // 3. LLAMAMOS AL REPOSITORIO (Acá es donde se usa el update de la tabla intermedia)
-            var asignacionActualizada = await _herramientaRepository.ActualizarAsignacionAsync(asignacionActiva);
-            if (!asignacionActualizada) return false;
-
-            // 4. Cambiamos el estado de la herramienta fuerte a "Disponible" para que se pueda volver a usar
-            var herramienta = await _herramientaRepository.ObtenerHerramientaPorIdAsync(idHerramienta);
-            if (herramienta != null)
-            {
-                herramienta.EstadoDisponibilidad = "Disponible";
-                await _herramientaRepository.ActualizarHerramientaAsync(herramienta);
-            }
+            // 6. Actualizar el estado
+            herramienta.EstadoDisponibilidad = "En Obra";
+            await _herramientaRepository.ActualizarHerramientaAsync(herramienta);
 
             return true;
         }
+
+        // ✅ DEVOLVER - CORREGIDO
+        public async Task<bool> RegistrarDevolucionHerramientaAsync(int idHerramienta, int idObra)
+        {
+            // 1. Buscar la asignación activa
+            var asignacionActiva = await _herramientaRepository.ObtenerAsignacionActivaAsync(idHerramienta, idObra);
+            if (asignacionActiva == null) return false;
+
+            // 2. Registrar la devolución
+            asignacionActiva.FechaDevolucion = DateTime.Now.Date;
+            var resultado = await _herramientaRepository.ActualizarAsignacionAsync(asignacionActiva);
+            if (!resultado) return false;
+
+            // 3. ✅ ACTUALIZAR EL ESTADO DE LA HERRAMIENTA A "Disponible"
+            var herramienta = await _herramientaRepository.ObtenerHerramientaPorIdAsync(idHerramienta);
+            if (herramienta == null) return false;
+
+            herramienta.EstadoDisponibilidad = "Disponible";
+            var actualizado = await _herramientaRepository.ActualizarHerramientaAsync(herramienta);
+
+            return actualizado;
+        }
     }
 }
-

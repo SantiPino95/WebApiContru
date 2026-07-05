@@ -1,4 +1,6 @@
-﻿using MiWebApi.DTOs;
+﻿using Microsoft.EntityFrameworkCore;
+using MiWebApi.DTOs;
+using MiWebApi.Entity;
 using MiWebApi.Repository.Usuarios;
 
 namespace MiWebApi.Services.Usuarios
@@ -6,10 +8,13 @@ namespace MiWebApi.Services.Usuarios
     public class UsuarioService : IUsuarioService
     {
         private readonly IUsuarioRepository _usuarioRepository;
+        private readonly MiWebApi.Data.DbcontruContext _context; // 👈 Agregar el contexto
 
-        public UsuarioService(IUsuarioRepository usuarioRepository)
+        // 👈 Inyectar el contexto en el constructor
+        public UsuarioService(IUsuarioRepository usuarioRepository, MiWebApi.Data.DbcontruContext context)
         {
             _usuarioRepository = usuarioRepository;
+            _context = context;
         }
 
         public async Task<IEnumerable<UsuarioPendienteDto>> ObtenerPendientesAsync()
@@ -27,12 +32,32 @@ namespace MiWebApi.Services.Usuarios
             }).ToList();
         }
 
-        public async Task<bool> AprobarUsuarioAsync(int id)
+        public async Task<bool> AprobarUsuarioAsync(int id, string rol, int? idEmpleado)
         {
             var usuario = await _usuarioRepository.ObtenerPorIdAsync(id);
             if (usuario == null) return false;
 
+            // 1. Cambiar estado a Activo
             usuario.Estado = "Activo";
+
+            // 2. Obtener el ID del rol por nombre
+            var rolId = await ObtenerIdRolPorNombre(rol);
+            if (rolId == 0) return false; // Rol no encontrado
+
+            usuario.IdRol = rolId;
+
+            // 3. Si se vincula a un empleado, actualizar el empleado
+            if (idEmpleado.HasValue)
+            {
+                var empleado = await _context.Empleados.FindAsync(idEmpleado.Value);
+                if (empleado != null)
+                {
+                    empleado.IdUsuario = usuario.IdUsuario;
+                    _context.Empleados.Update(empleado);
+                }
+            }
+
+            // 4. Guardar cambios
             return await _usuarioRepository.ActualizarAsync(usuario);
         }
 
@@ -43,6 +68,45 @@ namespace MiWebApi.Services.Usuarios
 
             usuario.Estado = "Rechazado";
             return await _usuarioRepository.ActualizarAsync(usuario);
+        }
+
+        public async Task<bool> SuspenderUsuarioAsync(int id)
+        {
+            var usuario = await _usuarioRepository.ObtenerPorIdAsync(id);
+            if (usuario == null) return false;
+
+            usuario.Estado = "Suspendido";
+            return await _usuarioRepository.ActualizarAsync(usuario);
+        }
+
+        public async Task<bool> ReactivarUsuarioAsync(int id)
+        {
+            var usuario = await _usuarioRepository.ObtenerPorIdAsync(id);
+            if (usuario == null) return false;
+
+            usuario.Estado = "Activo";
+            return await _usuarioRepository.ActualizarAsync(usuario);
+        }
+
+        public async Task<bool> CambiarRolAsync(int id, string nuevoRol)
+        {
+            var usuario = await _usuarioRepository.ObtenerPorIdAsync(id);
+            if (usuario == null) return false;
+
+            var rolId = await ObtenerIdRolPorNombre(nuevoRol);
+            if (rolId == 0) return false;
+
+            usuario.IdRol = rolId;
+            return await _usuarioRepository.ActualizarAsync(usuario);
+        }
+
+        // ── MÉTODO AUXILIAR: Obtener ID del rol por nombre ──
+        private async Task<int> ObtenerIdRolPorNombre(string nombreRol)
+        {
+            var rol = await _context.Rols
+                .FirstOrDefaultAsync(r => r.NombreRol == nombreRol);
+
+            return rol?.IdRol ?? 0;
         }
     }
 }

@@ -1,55 +1,46 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Text.Json.Serialization;
 
 namespace MiWebApi.DTOs
 {
-    // DTO para REGISTRO de nuevo usuario
     public class RegisterDto
     {
-        [Required(ErrorMessage = "El email es obligatorio")]
-        [EmailAddress(ErrorMessage = "Formato de email inválido")]
+        [JsonPropertyName("email")]
         public string Email { get; set; } = null!;
 
-        [Required(ErrorMessage = "La contraseña es obligatoria")]
-        [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
+        [JsonPropertyName("password")]
         public string Password { get; set; } = null!;
-
-        [Required(ErrorMessage = "El nombre es obligatorio")]
-        public string Nombre { get; set; } = null!;
-
-        [Required(ErrorMessage = "El apellido es obligatorio")]
-        public string Apellido { get; set; } = null!;
-
-        [Required(ErrorMessage = "La cédula es obligatoria")]
-        public string Cedula { get; set; } = null!;
-
-        public string? Telefono { get; set; }
-
-        public decimal ValorHora { get; set; } = 0;
-
-        public string Categoria { get; set; } = "Oficial";
-
-        public int IdRol { get; set; } = 2; // Por defecto "Empleado" (rol básico)
     }
 
-    // DTO para LOGIN
     public class LoginDto
     {
-        [Required(ErrorMessage = "El email es obligatorio")]
-        [EmailAddress(ErrorMessage = "Formato de email inválido")]
+        [JsonPropertyName("email")]
         public string Email { get; set; } = null!;
 
-        [Required(ErrorMessage = "La contraseña es obligatoria")]
+        [JsonPropertyName("password")]
         public string Password { get; set; } = null!;
     }
 
-    // DTO para RESPUESTA de Login (devuelve el token)
     public class LoginResponseDto
     {
+        [JsonPropertyName("token")]
         public string Token { get; set; } = null!;
+
+        [JsonPropertyName("email")]
         public string Email { get; set; } = null!;
+
+        [JsonPropertyName("nombreCompleto")]
         public string NombreCompleto { get; set; } = null!;
+
+        [JsonPropertyName("rol")]
         public string Rol { get; set; } = null!;
+
+        [JsonPropertyName("idUsuario")]
         public int IdUsuario { get; set; }
+
+        [JsonPropertyName("expira")]
         public DateTime Expira { get; set; }
+
+        [JsonPropertyName("idEmpleado")]
+        public int? IdEmpleado { get; set; }
     }
 }
