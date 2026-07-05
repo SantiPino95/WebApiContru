@@ -89,5 +89,13 @@ namespace MiWebApi.Services.Materiales
 
             return await _materialRepository.RegistrarConsumoMaterialAsync(consumo);
         }
+        public async Task<bool> ReponerStockAsync(ReponerStockDto dto)
+{
+    var stock = await _materialRepository.ObtenerStockPorMaterialIdAsync(dto.IdMaterial);
+    if (stock == null) return false;
+
+    stock.CantidadDisponible += dto.Cantidad;
+    return await _materialRepository.ActualizarStockAsync(stock);
+}
     }
 }
