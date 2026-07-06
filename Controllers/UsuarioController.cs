@@ -21,7 +21,13 @@ namespace MiWebApi.Controllers
             return Ok(await _usuarioService.ObtenerPendientesAsync());
         }
 
-        // ✅ CORREGIDO: Recibir rol y idEmpleado del body
+        // ✅ NUEVO: Obtener TODOS los usuarios
+        [HttpGet("todos")]
+        public async Task<IActionResult> GetTodos()
+        {
+            return Ok(await _usuarioService.ObtenerTodosAsync());
+        }
+
         [HttpPut("{id}/aprobar")]
         public async Task<IActionResult> Aprobar(int id, [FromBody] AprobarUsuarioDto dto)
         {
@@ -46,8 +52,6 @@ namespace MiWebApi.Controllers
 
             return Ok(new { mensaje = "Usuario rechazado" });
         }
-
-        // ── NUEVOS ENDPOINTS ──
 
         [HttpPut("{id}/suspender")]
         public async Task<IActionResult> Suspender(int id)
@@ -82,6 +86,17 @@ namespace MiWebApi.Controllers
                 return NotFound(new { mensaje = $"No se encontró el usuario con ID {id}" });
 
             return Ok(new { mensaje = $"Rol actualizado a {dto.Rol}" });
+        }
+
+        // ✅ NUEVO: Eliminar usuario
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Eliminar(int id)
+        {
+            var resultado = await _usuarioService.EliminarUsuarioAsync(id);
+            if (!resultado)
+                return NotFound(new { mensaje = $"No se encontró el usuario con ID {id}" });
+
+            return Ok(new { mensaje = "Usuario eliminado correctamente." });
         }
     }
 }

@@ -34,13 +34,7 @@ namespace MiWebApi.Controllers
             return Ok(gasto);
         }
 
-        // GET: api/Gasto/obra/{idObra}
-        [HttpGet("obra/{idObra}")]
-        public async Task<IActionResult> GetByObra(int idObra)
-        {
-            var gastos = await _gastoService.ObtenerPorObraAsync(idObra);
-            return Ok(gastos);
-        }
+       
 
         // POST: api/Gasto
         [HttpPost]

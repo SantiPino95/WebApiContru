@@ -28,7 +28,10 @@ namespace MiWebApi.Services.Usuarios
                 NombreEmpleado = u.Empleado?.Nombre,
                 ApellidoEmpleado = u.Empleado?.Apellido,
                 Estado = u.Estado ?? "Pendiente",
-                NombreRol = u.IdRolNavigation?.NombreRol ?? "Sin Rol"
+                NombreRol = u.IdRolNavigation?.NombreRol ?? "Sin Rol",
+                IdEmpleado = u.Empleado?.IdEmpleado,  // ✅ Agregar
+                FechaReg = DateTime.Now
+
             }).ToList();
         }
 
@@ -107,6 +110,38 @@ namespace MiWebApi.Services.Usuarios
                 .FirstOrDefaultAsync(r => r.NombreRol == nombreRol);
 
             return rol?.IdRol ?? 0;
+        }
+        public async Task<IEnumerable<UsuarioPendienteDto>> ObtenerTodosAsync()
+        {
+            var entidades = await _usuarioRepository.ListarTodosAsync();
+
+            return entidades.Select(u => new UsuarioPendienteDto
+            {
+                IdUsuario = u.IdUsuario,
+                Email = u.Email,
+                NombreEmpleado = u.Empleado?.Nombre,
+                ApellidoEmpleado = u.Empleado?.Apellido,
+                Estado = u.Estado ?? "Pendiente",
+                NombreRol = u.IdRolNavigation?.NombreRol ?? "Sin Rol",
+                IdEmpleado = u.Empleado?.IdEmpleado,
+                FechaReg = u.FechaReg ?? DateTime.Now
+            }).ToList();
+        }
+
+        public async Task<bool> EliminarUsuarioAsync(int id)
+        {
+            var usuario = await _usuarioRepository.ObtenerPorIdAsync(id);
+            if (usuario == null) return false;
+
+            // Si el usuario está vinculado a un empleado, desvincularlo
+            if (usuario.Empleado != null)
+            {
+                usuario.Empleado.IdUsuario = null;
+                _context.Empleados.Update(usuario.Empleado);
+            }
+
+            _context.Usuarios.Remove(usuario);
+            return await _context.SaveChangesAsync() > 0;
         }
     }
 }

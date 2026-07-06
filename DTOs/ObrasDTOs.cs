@@ -33,6 +33,7 @@
 
         public DateTime? FechaFinPrevista { get; set; }
 
+        public int PorcentajeAvance { get; set; }
 
     }
 
@@ -56,5 +57,6 @@
         public List<EmpleadoListadoDTOs> EmpleadosAsignados { get; set; } = new();
     }
 
+  
 
 }

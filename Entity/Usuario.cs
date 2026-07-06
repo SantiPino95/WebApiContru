@@ -14,6 +14,7 @@ public partial class Usuario
     public string Contrasena { get; set; } = null!;
 
     public string? Estado { get; set; }
+    public DateTime? FechaReg { get; set; }
 
     public virtual Empleado? Empleado { get; set; }
 

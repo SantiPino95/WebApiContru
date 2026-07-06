@@ -118,16 +118,34 @@ namespace MiWebApi.Services.Obras
             var obraExistente = await _obraRepository.ObtenerObraPorIdAsync(idObra);
             if (obraExistente == null)
                 return false;
+
+            // 1. Actualizas los datos básicos de la obra que vienen del DTO
             obraExistente.IdCliente = dto.IdCliente;
             obraExistente.NombreObra = dto.NombreObra;
             obraExistente.Direccion = dto.Direccion;
             obraExistente.FechaInicio = dto.FechaInicio;
             obraExistente.FechaFinPrevista = dto.FechaFinPrevista;
+
+            // 2. Buscamos el último seguimiento manual para saber el porcentaje actual.
+            // Usamos el operador "?" por seguridad, por si la obra es nueva y no tiene seguimientos aún.
+            var ultimoSeguimiento = obraExistente.SeguimientoObras
+                .OrderByDescending(s => s.Fecha) // Revisa si tu campo de fecha se llama así
+                .FirstOrDefault();
+
+            // 3. Si el porcentaje de ese último reporte manual llegó a 100, cambiamos el estado
+            // (Revisa si en tu tabla SeguimientoObra el campo se llama "PorcentajeAvance")
+            if (ultimoSeguimiento != null && ultimoSeguimiento.PorcentajeAvance >= 100)
+            {
+                obraExistente.Estado = "Realizada";
+            }
+            else
+            {
+                obraExistente.Estado = "En Progreso";
+            }
+
             await _obraRepository.ActualizarObraAsync(obraExistente);
             return true;
         }
-
-       
     }
 }
 

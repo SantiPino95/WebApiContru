@@ -572,6 +572,10 @@ public partial class DbcontruContext : DbContext
             entity.Property(e => e.Estado)
                 .HasMaxLength(20)
                 .HasDefaultValueSql("'Pendiente'");
+            entity.Property(e => e.FechaReg)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnName("FechaReg");
             entity.Property(e => e.IdRol).HasColumnName("Id_Rol");
 
             entity.HasOne(d => d.IdRolNavigation).WithMany(p => p.Usuarios)

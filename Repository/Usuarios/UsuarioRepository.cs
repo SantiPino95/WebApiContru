@@ -22,6 +22,15 @@ namespace MiWebApi.Repository.Usuarios
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Usuario>> ListarTodosAsync()
+        {
+            return await _context.Usuarios
+                .Include(u => u.IdRolNavigation)
+                .Include(u => u.Empleado)
+                .OrderByDescending(u => u.IdUsuario)
+                .ToListAsync();
+        }
+
         public async Task<Usuario?> ObtenerPorIdAsync(int id)
         {
             return await _context.Usuarios
