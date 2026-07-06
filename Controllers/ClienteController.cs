@@ -6,6 +6,9 @@ namespace MiWebApi.Controllers
 {
         [ApiController] // Le dice a .NET que esta clase es una API
         [Route("api/[controller]")]
+      
+
+    // Define la ruta base para las acciones del controlador. [controller] se reemplaza con el nombre del controlador, en este caso "Cliente".
     public class ClienteController : ControllerBase
     {
         private readonly IClienteService _clienteService;
@@ -14,7 +17,8 @@ namespace MiWebApi.Controllers
         {
             _clienteService = clienteService;
         }
-
+     
+        
         [HttpGet]
         public async Task<IActionResult> ListarClientes()
         {

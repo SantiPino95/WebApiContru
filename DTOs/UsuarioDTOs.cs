@@ -9,6 +9,9 @@
         public string? ApellidoEmpleado { get; set; }
         public string Estado { get; set; } = null!;
         public string NombreRol { get; set; } = null!;
+
+        public int? IdEmpleado { get; set; }  // ID del empleado vinculado
+        public DateTime FechaReg { get; set; } = DateTime.Now;  // Fecha de registro
     }
 
     // ── DTO para aprobar usuario ──

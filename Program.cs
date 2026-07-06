@@ -1,10 +1,11 @@
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MiWebApi.Data;
+using MiWebApi.Repository.Orden_Compra;
 using MiWebApi.Repository.Clientes;
 using MiWebApi.Repository.Empleados;
+using MiWebApi.Repository.Gastos;
 using MiWebApi.Repository.Herramientas;
 using MiWebApi.Repository.Materiales;
 using MiWebApi.Repository.Novedades;
@@ -12,11 +13,13 @@ using MiWebApi.Repository.Obras;
 using MiWebApi.Repository.PagosProveedores;
 using MiWebApi.Repository.Presupuestos;
 using MiWebApi.Repository.Proveedores;
-using MiWebApi.Repository.Usuarios;
 using MiWebApi.Repository.Seguimientos;
+using MiWebApi.Repository.Usuarios;
+using MiWebApi.Services.Orden_Compra;
 using MiWebApi.Services.Auth;
 using MiWebApi.Services.Clientes;
 using MiWebApi.Services.Empleados;
+using MiWebApi.Services.Gastos;
 using MiWebApi.Services.Herramientas;
 using MiWebApi.Services.Materiales;
 using MiWebApi.Services.Novedades;
@@ -24,8 +27,10 @@ using MiWebApi.Services.Obras;
 using MiWebApi.Services.PagosProveedores;
 using MiWebApi.Services.Presupuestos;
 using MiWebApi.Services.Proveedores;
-using MiWebApi.Services.Usuarios;
 using MiWebApi.Services.Seguimientos;
+using MiWebApi.Services.Usuarios;
+using System.Text;
+using MiWebApi.Services.OrdenesCompra;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -99,6 +104,13 @@ builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+//Gastos 
+builder.Services.AddScoped<IGastoRepository, GastoRepository>();
+builder.Services.AddScoped<IGastoService, GastoService>();
+
+//OrdenCompras
+builder.Services.AddScoped<IOrdenCompraRepository, OrdenCompraRepository>();
+builder.Services.AddScoped<IOrdenCompraService, OrdenCompraService>();
 
 // Autenticación JWT
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"] ?? "MiClaveSuperSecretaParaJWT1234567890!");

@@ -11,17 +11,22 @@ namespace MiWebApi.Controllers
     {
         private readonly IMaterialService _materialService;
 
+        // Constructor que inyecta el servicio de materiales
         public MaterialesController(IMaterialService materialService)
         {
             _materialService = materialService;
         }
 
+
+        // GET: api/Materiales
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             return Ok(await _materialService.ObtenerMaterialesParaAdminAsync());
         }
 
+
+        // GET: api/Materiales/{id}
         [HttpPost]
         public async Task<IActionResult> Create(CrearMaterialDto dto)
         {
@@ -30,6 +35,8 @@ namespace MiWebApi.Controllers
             return Ok("Material registrado con su stock inicial.");
         }
 
+
+        // GET: api/Materiales/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, CrearMaterialDto dto)
         {
@@ -38,6 +45,8 @@ namespace MiWebApi.Controllers
             return Ok("Material actualizado con éxito.");
         }
 
+
+        // DELETE: api/Materiales/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -46,6 +55,8 @@ namespace MiWebApi.Controllers
             return Ok("Material eliminado del sistema.");
         }
 
+
+        // POST: api/Materiales/consumir
         [HttpPost("consumir")]
         public async Task<IActionResult> ConsumirMaterial(int idMaterial, int idObra, decimal cantidad)
         {
@@ -53,6 +64,8 @@ namespace MiWebApi.Controllers
             if (!resultado) return BadRequest("No se pudo registrar el consumo. Verifica si el material existe o si hay stock disponible suficiente.");
             return Ok("Consumo registrado y stock actualizado correctamente.");
         }
+
+
 
         // POST: api/Materiales/entrada
         [HttpPost("entrada")]

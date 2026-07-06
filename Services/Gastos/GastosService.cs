@@ -68,7 +68,7 @@ namespace MiWebApi.Services.Gastos
             var gasto = new GastosObra
             {
                 IdObra = dto.IdObra,
-                Fecha = dto.Fecha,
+                Fecha = dto.Fecha.Date,
                 Monto = dto.Monto,
                 Descripcion = dto.Descripcion,
                 CategoriaGasto = dto.CategoriaGasto,
