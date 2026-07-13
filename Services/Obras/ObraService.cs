@@ -1,6 +1,10 @@
 ﻿
+using Microsoft.EntityFrameworkCore;
 using MiWebApi.DTOs;
 using MiWebApi.Repository.Obras;
+using MiWebApi.Data;
+using MiWebApi.Entity;
+using System.Linq;
 
 
 namespace MiWebApi.Services.Obras
@@ -8,9 +12,11 @@ namespace MiWebApi.Services.Obras
     public class ObraService : IObraService
     {
         private readonly IObraRepository _obraRepository;
-        public ObraService(IObraRepository obraRepository)
+        private readonly DbcontruContext _context;
+        public ObraService(IObraRepository obraRepository, DbcontruContext context)
         {
             _obraRepository = obraRepository;
+            _context = context;
         }
 
 
@@ -72,13 +78,13 @@ namespace MiWebApi.Services.Obras
                 NombreCliente = obra.IdClienteNavigation != null ? obra.IdClienteNavigation.Nombre : "Sin Cliente",
                 CodigoFormateado = $"#{obra.CodigoPublico}",
 
-            EmpleadosAsignados = obra.EmpleadoObras.Select(eo => new EmpleadoListadoDTOs
-            {
-                IdEmpleado = eo.IdEmpleadoNavigation.IdEmpleado,
-                NombreCompleto = $"{eo.IdEmpleadoNavigation.Nombre} {eo.IdEmpleadoNavigation.Apellido}",
-                Categoria = eo.IdEmpleadoNavigation.Categoria,
-                Telefono = eo.IdEmpleadoNavigation.Telefono
-            }).ToList()
+                EmpleadosAsignados = obra.EmpleadoObras.Select(eo => new EmpleadoListadoDTOs
+                {
+                    IdEmpleado = eo.IdEmpleadoNavigation.IdEmpleado,
+                    NombreCompleto = $"{eo.IdEmpleadoNavigation.Nombre} {eo.IdEmpleadoNavigation.Apellido}",
+                    Categoria = eo.IdEmpleadoNavigation.Categoria,
+                    Telefono = eo.IdEmpleadoNavigation.Telefono
+                }).ToList()
             };
 
         }
@@ -106,45 +112,67 @@ namespace MiWebApi.Services.Obras
                 FechaInicio = dto.FechaInicio,
                 FechaFinPrevista = dto.FechaFinPrevista,
                 Estado = "En Progreso",
-                CodigoPublico = Guid.NewGuid().ToString().Substring(0, 8).ToUpper()
+                CodigoPublico = Guid.NewGuid().ToString().Substring(0, 10).ToUpper()
             };
             await _obraRepository.AgregarObraAsync(nuevaObra);
             return true;
 
 
         }
-        public async Task<bool> ActualizarObraAsync(int idObra, CrearObraDto dto)
+        public async Task<bool> ActualizarObraAsync(int id, ObraAdminListadoDto dto)
         {
-            var obraExistente = await _obraRepository.ObtenerObraPorIdAsync(idObra);
-            if (obraExistente == null)
-                return false;
+            // 1. Buscamos la obra incluyendo su relación de Seguimiento
+            // (Asegúrate de que tu repositorio o consulta use .Include(o => o.Seguimiento))
+            var obraBD = await _context.Obras
+                .Include(o => o.SeguimientoObras) // 🚀 Ajusta "Seguimiento" al nombre exacto de la propiedad en tu entidad Obra
+                .FirstOrDefaultAsync(o => o.IdObra == id);
 
-            // 1. Actualizas los datos básicos de la obra que vienen del DTO
-            obraExistente.IdCliente = dto.IdCliente;
-            obraExistente.NombreObra = dto.NombreObra;
-            obraExistente.Direccion = dto.Direccion;
-            obraExistente.FechaInicio = dto.FechaInicio;
-            obraExistente.FechaFinPrevista = dto.FechaFinPrevista;
+            if (obraBD == null) return false;
 
-            // 2. Buscamos el último seguimiento manual para saber el porcentaje actual.
-            // Usamos el operador "?" por seguridad, por si la obra es nueva y no tiene seguimientos aún.
-            var ultimoSeguimiento = obraExistente.SeguimientoObras
-                .OrderByDescending(s => s.Fecha) // Revisa si tu campo de fecha se llama así
-                .FirstOrDefault();
+            // 2. Actualizamos los datos básicos de la obra
+            obraBD.NombreObra = dto.NombreObra;
+            obraBD.Direccion = dto.Direccion;
+            obraBD.Estado = dto.Estado; // Actualizamos el estado ('En Progreso', 'Finalizada', etc.)
 
-            // 3. Si el porcentaje de ese último reporte manual llegó a 100, cambiamos el estado
-            // (Revisa si en tu tabla SeguimientoObra el campo se llama "PorcentajeAvance")
-            if (ultimoSeguimiento != null && ultimoSeguimiento.PorcentajeAvance >= 100)
+            if (obraBD.SeguimientoObras != null && obraBD.SeguimientoObras.Any())
             {
-                obraExistente.Estado = "Realizada";
+                // Buscamos el último registro de seguimiento que se haya creado para esta obra
+                var ultimoSeguimiento = obraBD.SeguimientoObras.LastOrDefault(); // O .FirstOrDefault() según cómo los ordenes
+
+                if (ultimoSeguimiento != null)
+                {
+                    
+                    ultimoSeguimiento.PorcentajeAvance = dto.PorcentajeAvanceActual;
+
+                    _context.Entry(ultimoSeguimiento).State = EntityState.Modified;
+                }
             }
             else
             {
-                obraExistente.Estado = "En Progreso";
-            }
+                // Si la lista está vacía o es nula, inicializamos la colección y creamos el primer registro
+                if (obraBD.SeguimientoObras == null)
+                {
+                    obraBD.SeguimientoObras = new List<SeguimientoObra>();
+                }
 
-            await _obraRepository.ActualizarObraAsync(obraExistente);
-            return true;
+                var nuevoSeguimiento = new SeguimientoObra
+                {
+                    IdObra = id, // Revisa si en tu entidad se llama IdObra o Id_Obra
+                    PorcentajeAvance = dto.PorcentajeAvanceActual
+                    // ... agrega aquí otras propiedades obligatorias si tu base de datos las pide
+                };
+
+                obraBD.SeguimientoObras.Add(nuevoSeguimiento);
+            }
+            // 4. Guardamos los cambios. EF Core guardará la Obra y el Seguimiento en una sola transacción
+            _context.Obras.Update(obraBD);
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> ExisteObraPorCodigoPublicoAsync(string codigoPublico)
+        {
+            var obra = await _context.Obras.FirstOrDefaultAsync(o => o.CodigoPublico == codigoPublico);
+            return obra != null;
         }
     }
 }

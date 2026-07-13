@@ -140,6 +140,7 @@ public partial class DbcontruContext : DbContext
             entity.Property(e => e.IdUsuario).HasColumnName("Id_Usuario");
             entity.Property(e => e.Nombre).HasMaxLength(100);
             entity.Property(e => e.Apellido).HasMaxLength(100);
+            entity.Property(e => e.Email).HasMaxLength(100);
             entity.Property(e => e.Telefono).HasMaxLength(20);
             entity.Property(e => e.ValorHora)
                 .HasPrecision(10)

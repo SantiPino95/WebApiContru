@@ -17,6 +17,8 @@ public partial class Empleado
 
     public string? Telefono { get; set; }
 
+    public string Email { get; set; } = null!;
+
     public decimal ValorHora { get; set; }
 
     public string Categoria { get; set; } = null!;

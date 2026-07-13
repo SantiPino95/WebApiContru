@@ -15,23 +15,43 @@ namespace MiWebApi.Controllers
             _seguimientoService = seguimientoService;
         }
 
+        // 1. GET: api/seguimiento/obra/5 (Lista todo el historial de avances de una obra)
         [HttpGet("obra/{idObra}")]
         public async Task<IActionResult> GetByObra(int idObra)
         {
-            return Ok(await _seguimientoService.ObtenerPorObraAsync(idObra));
+            var historial = await _seguimientoService.ListarPorObraAsync(idObra);
+            return Ok(historial);
         }
 
+        // 2. GET: api/seguimiento/obra/5/ultimo (Obtiene solo el último avance registrado)
+        [HttpGet("obra/{idObra}/ultimo")]
+        public async Task<IActionResult> GetUltimoByObra(int idObra)
+        {
+            var ultimo = await _seguimientoService.ObtenerUltimoPorObraAsync(idObra);
+            if (ultimo == null)
+            {
+                return NotFound(new { mensaje = "No hay registros de seguimiento para esta obra." });
+            }
+            return Ok(ultimo);
+        }
+
+        // 3. POST: api/seguimiento (Registra un nuevo avance de obra)
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CrearSeguimientoDto dto)
+        public async Task<IActionResult> Registrar([FromBody] CrearSeguimientoDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var resultado = await _seguimientoService.CrearSeguimientoAsync(dto);
-            if (!resultado)
-                return BadRequest(new { mensaje = "No se pudo crear el seguimiento." });
+            // 🚀 Pasamos el DTO completo al servicio
+            var (exito, mensaje) = await _seguimientoService.RegistrarAvanceAsync(dto);
 
-            return StatusCode(201, new { mensaje = "Seguimiento creado con éxito" });
+            if (!exito)
+            {
+                // Si la suma supera el 100% o la obra no existe, devuelve HTTP 400 Bad Request
+                return BadRequest(new { mensaje });
+            }
+
+            return Ok(new { mensaje });
         }
     }
 }

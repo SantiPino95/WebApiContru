@@ -21,11 +21,22 @@ namespace MiWebApi.Controllers
             return Ok(await _usuarioService.ObtenerPendientesAsync());
         }
 
-        // ✅ NUEVO: Obtener TODOS los usuarios
+       
         [HttpGet("todos")]
         public async Task<IActionResult> GetTodos()
         {
             return Ok(await _usuarioService.ObtenerTodosAsync());
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> ActualizarUsuario(int id, [FromBody] ActualizarUsuarioDto dto)
+        {
+            var exito = await _usuarioService.ActualizarUsuarioAsync(id, dto);
+
+            if (!exito)
+                return BadRequest("No se pudo actualizar el usuario o vincular el empleado.");
+
+            return NoContent();
         }
 
         [HttpPut("{id}/aprobar")]

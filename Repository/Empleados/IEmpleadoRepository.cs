@@ -13,7 +13,10 @@ namespace MiWebApi.Repository.Empleados
             Task EliminarEmpleadoAsync(Empleado empleado);
         Task<IEnumerable<EmpleadoObra>> ListarEmpleadosAsignados();
         Task<EmpleadoObra?> AsignarEmpleadoAObraAsync(EmpleadoObra asignacion);
-        
+        Task<EmpleadoObra?> ObtenerAsignacionPorIdAsync(int idObra, int idEmpleado);
+        Task<bool> ExisteEmpleadoEnCualquierObraAsync(int idEmpleado);
+        Task<bool> EliminarAsignacionEmpleadoObraAsync(EmpleadoObra empleadoobra);
+
     }
 
 }
