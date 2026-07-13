@@ -26,4 +26,12 @@
     {
         public string Rol { get; set; } = null!;
     }
+
+    public class ActualizarUsuarioDto
+    {
+        public string Email { get; set; } = null!;
+        public string? Estado { get; set; }
+        public int? IdRol { get; set; }
+        public int? IdEmpleado { get; set; }
+    }
 }

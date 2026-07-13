@@ -39,6 +39,14 @@ namespace MiWebApi.Controllers
             return Ok(obra);
         }
 
+
+        [HttpGet("existe/{codigoPublico}")]
+        public async Task<IActionResult> ExisteObra(string codigoPublico)
+        {
+            var existe = await _obraService.ExisteObraPorCodigoPublicoAsync(codigoPublico);
+            return Ok(existe); // Retorna true o false con un HTTP 200
+        }
+
         // 3. POST: api/obras (Crear una obra nueva)
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CrearObraDto dto)
@@ -54,16 +62,18 @@ namespace MiWebApi.Controllers
             return StatusCode(201, new { mensaje = "Obra creada con éxito" }); // 201 significa "Creado con éxito"
         }
 
-        // 4. PUT: api/obras/5 (Editar una obra existente)
+        // 4. PUT: api/obras/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] CrearObraDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] ObraAdminListadoDto dto) // 👈 Cambiado el DTO aquí
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
+            // Mandamos el ID y el objeto completo al servicio de la base de datos
             var resultado = await _obraService.ActualizarObraAsync(id, dto);
+
             if (!resultado)
             {
-                return NotFound(new { mensaje = $"No se pudo actualizar. No existe la obra con ID {id}" });
+                return NotFound(new { mensaje = $"No se pudo encontrar o actualizar la obra con ID {id}" });
             }
 
             return Ok(new { mensaje = "Obra actualizada con éxito" });

@@ -28,7 +28,8 @@ namespace MiWebApi.Repository.Clientes
         {
 
 
-            return await _context.Clientes.ToListAsync();
+            return await _context.Clientes.Include(c => c.Obras).
+                ToListAsync();
 
 
         }

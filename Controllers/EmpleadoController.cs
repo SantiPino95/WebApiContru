@@ -39,10 +39,23 @@ namespace MiWebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CrearEmpleado([FromBody] CrearEmpleadoDTOs dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            await _empleadoService.CrearEmpleadoAsync(dto);
-            return StatusCode(201, new { mensaje = "Empleado creado con éxito" });
+            try
+            {
+                await _empleadoService.CrearEmpleadoAsync(dto);
+                return StatusCode(201, new { mensaje = "Empleado creado con éxito" });
+            }
+            catch (Exception ex)
+            {
+                
+                var errorReal = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return BadRequest(new { mensaje = $"Error interno en la API: {errorReal}" });
+            }
         }
 
         // 4. ACTUALIZAR (PUT: api/Empleado/5)
@@ -70,6 +83,21 @@ namespace MiWebApi.Controllers
             }
             return Ok(new { mensaje = "Empleado eliminado con éxito" });
         }
+
+
+        [HttpDelete("obra/{idObra}/asignacion/empleado/{idEmpleado}")]
+        public async Task<IActionResult> EliminarAsignacionEmpleadoObra(int idObra, int idEmpleado)
+        {
+            var resultado = await _empleadoService.EliminarAsignacionEmpleadoObraAsync(idObra, idEmpleado);
+            if (!resultado)
+            {
+                return NotFound(new { mensaje = $"No se pudo encontrar o eliminar la asignación del empleado con ID {idEmpleado} y obra con ID {idObra}." });
+            }
+            return Ok(new { mensaje = "Asignación eliminada con éxito" });
+        }
+
+
+
         // 6. OBTENER EMPLEADOS ASIGNADOS (GET: api/Empleado/asignados)
         [HttpGet("asignados")]
         public async Task<IActionResult> ObtenerEmpleadosAsignados()

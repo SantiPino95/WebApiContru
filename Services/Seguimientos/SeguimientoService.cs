@@ -1,4 +1,6 @@
-﻿using MiWebApi.DTOs;
+﻿using Microsoft.EntityFrameworkCore;
+using MiWebApi.Data;
+using MiWebApi.DTOs;
 using MiWebApi.Entity;
 using MiWebApi.Repository.Seguimientos;
 
@@ -6,70 +8,109 @@ namespace MiWebApi.Services.Seguimientos
 {
     public class SeguimientoService : ISeguimientoService
     {
-        private readonly ISeguimientoRepository _seguimientoRepository;
+        private readonly ISeguimientoRepository _seguimientoRepo;
+        private readonly DbcontruContext _context;
 
-        public SeguimientoService(ISeguimientoRepository seguimientoRepository)
+        public SeguimientoService(ISeguimientoRepository seguimientoRepo, DbcontruContext context)
         {
-            _seguimientoRepository = seguimientoRepository;
+            _seguimientoRepo = seguimientoRepo;
+            _context = context;
         }
 
-        public async Task<IEnumerable<SeguimientoListadoDto>> ObtenerPorObraAsync(int idObra)
+        // 1. Convertimos la lista de Entidades a DTOs
+        public async Task<IEnumerable<SeguimientoListadoDto>> ListarPorObraAsync(int idObra)
         {
-            var entidades = await _seguimientoRepository.ListarPorObraAsync(idObra);
+            var entidades = await _seguimientoRepo.ListarPorObraAsync(idObra);
 
             return entidades.Select(s => new SeguimientoListadoDto
             {
                 IdSeguimiento = s.IdSeguimiento,
                 IdObra = s.IdObra,
-                NombreObra = s.IdObraNavigation?.NombreObra ?? "Sin Obra",
-                Fecha = s.Fecha,
-                DescripcionAvance = s.DescripcionAvance,
                 PorcentajeAvance = s.PorcentajeAvance,
-                ImgProgreso = s.ImgProgreso
-            }).ToList();
+                DescripcionAvance = s.DescripcionAvance,
+                Fecha = s.Fecha
+            });
         }
 
         public async Task<SeguimientoListadoDto?> ObtenerUltimoPorObraAsync(int idObra)
         {
-            var entidad = await _seguimientoRepository.ObtenerUltimoPorObraAsync(idObra);
-            if (entidad == null) return null;
+            var s = await _seguimientoRepo.ObtenerUltimoPorObraAsync(idObra);
+            if (s == null) return null;
 
             return new SeguimientoListadoDto
             {
-                IdSeguimiento = entidad.IdSeguimiento,
-                IdObra = entidad.IdObra,
-                NombreObra = entidad.IdObraNavigation?.NombreObra ?? "Sin Obra",
-                Fecha = entidad.Fecha,
-                DescripcionAvance = entidad.DescripcionAvance,
-                PorcentajeAvance = entidad.PorcentajeAvance,
-                ImgProgreso = entidad.ImgProgreso
+                IdSeguimiento = s.IdSeguimiento,
+                IdObra = s.IdObra,
+                PorcentajeAvance = s.PorcentajeAvance,
+                DescripcionAvance = s.DescripcionAvance,
+                Fecha = s.Fecha
             };
         }
 
-        public async Task<bool> CrearSeguimientoAsync(CrearSeguimientoDto dto)
+        // 2. Registramos validando con DTO
+        public async Task<(bool Exito, string Mensaje)> RegistrarAvanceAsync(CrearSeguimientoDto dto)
         {
-            // Validar que el porcentaje esté entre 0 y 100
-            if (dto.PorcentajeAvance < 0 || dto.PorcentajeAvance > 100)
-                return false;
+            var obraBD = await _context.Obras
+                .Include(o => o.SeguimientoObras)
+                .FirstOrDefaultAsync(o => o.IdObra == dto.IdObra);
 
-            var seguimiento = new SeguimientoObra
+            if (obraBD == null)
+                return (false, "La obra no existe.");
+
+            // Suma de los avances que ya existen en la BD
+            decimal acumuladoActual = obraBD.SeguimientoObras?.Sum(s => s.PorcentajeAvance) ?? 0;
+
+            // 🛑 VALIDACIÓN DE MÁXIMO 100%
+            if (acumuladoActual + dto.PorcentajeAvance > 100)
+            {
+                decimal restante = 100 - acumuladoActual;
+                return (false, $"El avance superaría el 100%. Solo queda disponible un {restante}%.");
+            }
+            if (obraBD.Estado == "Cancelada")
+            {
+                return (false, "No se pueden registrar avances en una obra que se encuentra Cancelada.");
+            }
+            if(obraBD.Estado == "Finalizada")
+            {
+                return (false, "No se pueden registrar avances en una obra que ya ha sido Finalizada.");
+            }
+
+            // Mapeamos de DTO a Entidad pura
+            var nuevaEntidad = new SeguimientoObra
             {
                 IdObra = dto.IdObra,
-                Fecha = dto.Fecha,
-                DescripcionAvance = dto.DescripcionAvance,
                 PorcentajeAvance = dto.PorcentajeAvance,
-                ImgProgreso = dto.ImgProgreso
+                DescripcionAvance = dto.DescripcionAvance,
+                Fecha = DateTime.Now
             };
 
-            return await _seguimientoRepository.AgregarAsync(seguimiento);
+            // Guardamos el seguimiento mediante el repositorio
+            await _seguimientoRepo.AgregarAsync(nuevaEntidad);
+
+            // 🚀 ACTUALIZAMOS LA OBRA PRINCIPAL
+            decimal nuevoTotal = acumuladoActual + dto.PorcentajeAvance;
+
+            if (nuevoTotal >= 100)
+            {
+                obraBD.Estado = "Finalizada";
+            }
+            else if (obraBD.Estado == "Planificada")
+            {
+                obraBD.Estado = "En Progreso";
+            }
+
+            _context.Obras.Update(obraBD);
+            await _context.SaveChangesAsync();
+
+            return (true, "Avance registrado con éxito.");
         }
 
-        public async Task<bool> EliminarSeguimientoAsync(int id)
+        public async Task<bool> EliminarAsync(int idSeguimiento)
         {
-            var seguimiento = await _seguimientoRepository.ObtenerUltimoPorObraAsync(id);
-            if (seguimiento == null) return false;
+            var entidad = await _context.SeguimientoObras.FindAsync(idSeguimiento);
+            if (entidad == null) return false;
 
-            return await _seguimientoRepository.EliminarAsync(seguimiento);
+            return await _seguimientoRepo.EliminarAsync(entidad);
         }
     }
 }

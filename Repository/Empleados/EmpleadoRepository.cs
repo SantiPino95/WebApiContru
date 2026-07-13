@@ -56,6 +56,32 @@ namespace MiWebApi.Repository.Empleados
             await _context.SaveChangesAsync();
             return asignacion;
         }
+
+        public async Task<EmpleadoObra?> ObtenerAsignacionPorIdAsync(int idObra, int idEmpleado)
+        {
+            return await _context.EmpleadoObras
+                                 .FirstOrDefaultAsync(eo => eo.IdObra == idObra && eo.IdEmpleado == idEmpleado);
+        }
+
+        public async Task<bool> ExisteEmpleadoEnCualquierObraAsync(int idEmpleado)
+        {
+            // Revisa si existe AL MENOS UNA asignación para este empleado en la tabla
+            return await _context.EmpleadoObras
+                                 .AnyAsync(eo => eo.IdEmpleado == idEmpleado);
+        }
+
+
+        public async Task<bool> EliminarAsignacionEmpleadoObraAsync(EmpleadoObra empleadoobra)
+        {
+            var asignacion = await ObtenerAsignacionPorIdAsync(empleadoobra.IdObra, empleadoobra.IdEmpleado );
+            if (asignacion == null)
+            {
+                return false;
+            }
+            _context.EmpleadoObras.Remove(asignacion);
+          return  await _context.SaveChangesAsync() > 0;
+            
+        }
     }
 }
 

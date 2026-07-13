@@ -1,19 +1,22 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MiWebApi.DTOs;
-using MiWebApi.Entity;
+using MiWebApi.Data;
 using MiWebApi.Repository.Usuarios;
+using MiWebApi.Repository.Empleados;
 
 namespace MiWebApi.Services.Usuarios
 {
     public class UsuarioService : IUsuarioService
     {
         private readonly IUsuarioRepository _usuarioRepository;
-        private readonly MiWebApi.Data.DbcontruContext _context; // 👈 Agregar el contexto
+        private readonly IEmpleadoRepository _empleadoRepository;
+        private readonly DbcontruContext _context; 
 
-        // 👈 Inyectar el contexto en el constructor
-        public UsuarioService(IUsuarioRepository usuarioRepository, MiWebApi.Data.DbcontruContext context)
+        
+        public UsuarioService(IUsuarioRepository usuarioRepository, IEmpleadoRepository empleadoRepository, DbcontruContext context)
         {
             _usuarioRepository = usuarioRepository;
+            _empleadoRepository = empleadoRepository;
             _context = context;
         }
 
@@ -29,7 +32,7 @@ namespace MiWebApi.Services.Usuarios
                 ApellidoEmpleado = u.Empleado?.Apellido,
                 Estado = u.Estado ?? "Pendiente",
                 NombreRol = u.IdRolNavigation?.NombreRol ?? "Sin Rol",
-                IdEmpleado = u.Empleado?.IdEmpleado,  // ✅ Agregar
+                IdEmpleado = u.Empleado?.IdEmpleado,  
                 FechaReg = DateTime.Now
 
             }).ToList();
@@ -63,6 +66,66 @@ namespace MiWebApi.Services.Usuarios
             // 4. Guardar cambios
             return await _usuarioRepository.ActualizarAsync(usuario);
         }
+
+        public async Task<UsuarioPendienteDto?> ObtenerUsuarioPorIdAsync(int id)
+        {
+            var usuario = await _usuarioRepository.ObtenerPorIdAsync(id);
+            if (usuario == null) return null;
+            return new UsuarioPendienteDto
+            {
+                IdUsuario = usuario.IdUsuario,
+                Email = usuario.Email,
+                NombreEmpleado = usuario.Empleado?.Nombre,
+                ApellidoEmpleado = usuario.Empleado?.Apellido,
+                Estado = usuario.Estado ?? "Pendiente",
+                NombreRol = usuario.IdRolNavigation?.NombreRol ?? "Sin Rol",
+                IdEmpleado = usuario.Empleado?.IdEmpleado,
+                FechaReg = usuario.FechaReg ?? DateTime.Now
+            };
+        }
+        public async Task<bool> ActualizarUsuarioAsync(int id, ActualizarUsuarioDto dto)
+        {
+            // 1. Buscar el usuario
+            var usuario = await _usuarioRepository.ObtenerPorIdAsync(id);
+            if (usuario == null) return false;
+
+            // 2. Actualizar datos de usuario
+            usuario.Email = dto.Email;
+            // Si manejas Rol por string o IdRol, ajusta aquí:
+            // usuario.Rol = dto.Rol; 
+
+            await _usuarioRepository.ActualizarAsync(usuario);
+
+            // 3. GESTIÓN DE VINCULACIÓN CON EMPLEADO
+
+            // A) Buscar si este usuario YA tenía un empleado asignado previamente
+            var empleadoActual = await _empleadoRepository.ObtenerEmpleadoPorIdAsync(id);
+
+            // B) Si el empleado cambió o si seleccionó "Sin empleado" (null)
+            if (empleadoActual != null && empleadoActual.IdEmpleado != dto.IdEmpleado)
+            {
+                empleadoActual.IdUsuario = null; // Liberamos el vínculo anterior
+                await _empleadoRepository.ActualizarEmpleadoAsync(empleadoActual);
+            }
+
+            // C) Si seleccionó un nuevo empleado en el modal
+            if (dto.IdEmpleado.HasValue && dto.IdEmpleado.Value > 0)
+            {
+                // Si es un empleado distinto al que ya tenía
+                if (empleadoActual == null || empleadoActual.IdEmpleado != dto.IdEmpleado.Value)
+                {
+                    var nuevoEmpleado = await _empleadoRepository.ObtenerEmpleadoPorIdAsync(dto.IdEmpleado.Value);
+                    if (nuevoEmpleado != null)
+                    {
+                        nuevoEmpleado.IdUsuario = usuario.IdUsuario; // Asignamos la FK
+                        await _empleadoRepository.ActualizarEmpleadoAsync(nuevoEmpleado);
+                    }
+                }
+            }
+
+            return true;
+        }
+
 
         public async Task<bool> RechazarUsuarioAsync(int id)
         {
