@@ -51,6 +51,7 @@ namespace MiWebApi.Services.Empleados
             var listaEntidades = await _empleadoRepository.ListarEmpleadosAsignados();
             return listaEntidades.Select(e => new EmpleadoObraDTOs
             {
+                IdEmpleadoObra = e.IdEmpleadoObra,   
                 IdEmpleado = e.IdEmpleado,
                 NombreCompleto = $"{e.IdEmpleadoNavigation.Nombre} {e.IdEmpleadoNavigation.Apellido}",
                 Categoria = e.IdEmpleadoNavigation.Categoria,
@@ -82,6 +83,7 @@ namespace MiWebApi.Services.Empleados
             if (asignacion == null) return null;
             return new EmpleadoObraDTOs
             {
+                IdEmpleadoObra = asignacion.IdEmpleadoObra,
                 IdEmpleado = asignacion.IdEmpleado,
                 NombreCompleto = $"{asignacion.IdEmpleadoNavigation.Nombre} {asignacion.IdEmpleadoNavigation.Apellido}",
                 Categoria = asignacion.IdEmpleadoNavigation.Categoria,
